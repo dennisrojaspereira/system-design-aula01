@@ -336,6 +336,8 @@ function renderSystems() {
   const p = S.ports, dc = S.dc, up = n => S.services.find(s => s.service === n);
   const pgUrl = h => `postgres://shortener:shortener@${h}:5432/shortener`;
   const list = [
+    { nome: 'Interface visual do encurtador', svc: 'ui', desc: 'Página para criar links, testar o redirect e ver um resumo das métricas.',
+      f: [['Endereço', `http://localhost:${p.ui}`, 'link'], ['Login', 'Sem autenticação.', 'plain']] },
     { nome: 'Grafana', svc: 'grafana', desc: 'Dashboard “Encurtador de links — Aula 01” como página inicial.',
       f: [['Endereço', `http://localhost:${p.grafana}`, 'link'], ['Login', 'Não pede login: acesso anônimo com papel Admin.', 'plain']] },
     { nome: 'Prometheus', svc: 'prometheus', desc: 'Métricas da aplicação, do Postgres e do k6. Retenção de 2 dias.',

@@ -233,8 +233,10 @@ def state(since):
         "dc": " ".join(DC),
         "lab": current_lab(env),
         "env": env,
-        "ports": {"app": v.get("APP_PORT", "8080"), "lb": v.get("LB_PORT", "8000"),
-                  "grafana": v.get("GRAFANA_PORT", "3000"), "prom": v.get("PROM_PORT", "9090")},
+        # Mesma precedência do Compose: variável de ambiente, depois o .env, depois o padrão.
+        "ports": {k: os.environ.get(name) or v.get(name) or default for k, name, default in (
+            ("app", "APP_PORT", "8080"), ("lb", "LB_PORT", "8000"), ("grafana", "GRAFANA_PORT", "3000"),
+            ("prom", "PROM_PORT", "9090"), ("ui", "UI_PORT", "8090"))},
         "job": {"name": job["name"], "kind": job["kind"], "started": job["started"]} if job["name"] else None,
         "last": last,
         "services": _services["list"],
