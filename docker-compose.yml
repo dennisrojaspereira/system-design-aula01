@@ -128,6 +128,23 @@ services:
       DATA_SOURCE_NAME: postgresql://shortener:shortener@pg-replica:5432/shortener?sslmode=disable
     depends_on: [pg-replica]
 
+  # ---------- interface visual ----------
+  # Página para criar links, testar o redirect e ver um resumo das métricas.
+  ui:
+    image: nginx:1.27-alpine
+    environment:
+      GRAFANA_PORT: ${GRAFANA_PORT:-3000}
+      PROM_PORT: ${PROM_PORT:-9090}
+      # Só usadas pelo botão "Kubernetes": o mesmo lab num cluster local, se houver.
+      K8S_APP_PORT: ${K8S_APP_PORT:-8082}
+      K8S_PROM_PORT: ${K8S_PROM_PORT:-9091}
+      K8S_GRAFANA_PORT: ${K8S_GRAFANA_PORT:-3002}
+    volumes:
+      - ./ui/index.html:/usr/share/nginx/html/index.html:ro
+      - ./ui/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    ports: ["${UI_PORT:-8090}:80"]
+
   # ---------- carga ----------
   k6:
     image: grafana/k6:2.4.0

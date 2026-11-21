@@ -12,6 +12,7 @@ Material da primeira aula: um encurtador de links que evolui em seis estágios, 
 | `k6/` | Testes de carga |
 | `observability/` | Prometheus e o dashboard do Grafana |
 | `labs/` | Um `.env` por estágio da arquitetura |
+| `ui/` | Interface visual: criar link, testar o redirect e ver um resumo das métricas (http://localhost:8090; para trocar a porta, `UI_PORT`) |
 
 ## Pré-requisitos
 
