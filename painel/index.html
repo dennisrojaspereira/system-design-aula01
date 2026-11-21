@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel do laboratório — Aula 01</title>
+<style>
+  :root {
+    --bg: #f5f6f8; --surface: #ffffff; --surface-2: #eef0f4; --border: #dcdfe6;
+    --text: #1b1f27; --muted: #5d6675; --accent: #2456d6; --accent-text: #ffffff;
+    --ok: #16794a; --warn: #a15c00; --bad: #c0352b; --idle: #8a93a3;
+    --console-bg: #12151b; --console-text: #d6dbe4; --console-dim: #8b95a7;
+    --radius: 10px;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #101319; --surface: #181c24; --surface-2: #212633; --border: #2c3342;
+      --text: #e6e9ef; --muted: #9aa4b5; --accent: #7aa2ff; --accent-text: #0d1220;
+      --ok: #4cc38a; --warn: #e5a23c; --bad: #f0786d; --idle: #6c7689;
+      --console-bg: #0b0d12;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  a { color: var(--accent); }
+  code, .mono { font-family: var(--mono); font-size: 13px; }
+
+  header { padding: 20px 24px 14px; display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; }
+  header h1 { font-size: 20px; margin: 0; line-height: 1.25; text-wrap: balance; }
+  header p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+  .pills { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+  .pill { display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px; border-radius: 999px;
+    background: var(--surface); border: 1px solid var(--border); font-size: 13px; white-space: nowrap; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--idle); flex: none; }
+  .dot.ok { background: var(--ok); } .dot.warn { background: var(--warn); } .dot.bad { background: var(--bad); }
+  .dot.busy { background: var(--accent); animation: pulse 1s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .35; } }
+  @media (prefers-reduced-motion: reduce) { .dot.busy { animation: none; } }
+
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; padding: 0 24px 40px; }
+  @media (min-width: 1180px) {
+    .layout { grid-template-columns: minmax(0, 1fr) minmax(380px, 40%); align-items: start; }
+    .side { position: sticky; top: 16px; }
+    .console { height: calc(100vh - 110px); }
+  }
+  @media (max-width: 640px) { header, .layout { padding-left: 16px; padding-right: 16px; } }
+
+  section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 18px; margin-bottom: 20px; }
+  section > h2 { font-size: 16px; margin: 0 0 4px; }
+  section > .hint { color: var(--muted); font-size: 13px; margin: 0 0 14px; max-width: 70ch; }
+
+  button { font: inherit; font-size: 14px; cursor: pointer; border-radius: 7px; padding: 7px 13px;
+    border: 1px solid var(--border); background: var(--surface-2); color: var(--text); }
+  button:hover:not(:disabled) { border-color: var(--accent); }
+  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); font-weight: 600; }
+  button.danger { color: var(--bad); }
+  button.small { font-size: 12.5px; padding: 3px 9px; }
+
+  .labs { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(230px, 100%), 1fr)); gap: 12px; }
+  .lab { border: 1px solid var(--border); border-radius: 8px; padding: 13px; display: flex; flex-direction: column; gap: 6px; }
+  .lab.current { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+  .lab h3 { margin: 0; font-size: 15px; display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+  .lab h3 small { font-weight: 500; font-size: 12px; color: var(--accent); white-space: nowrap; }
+  .lab .arch { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  .lab p { margin: 0; font-size: 13px; flex: 1; }
+  .lab button { align-self: flex-start; margin-top: 4px; }
+
+  .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+  label.field { display: flex; flex-direction: column; gap: 3px; font-size: 12.5px; color: var(--muted); }
+  input, select, textarea { font: inherit; font-size: 14px; color: var(--text); background: var(--bg);
+    border: 1px solid var(--border); border-radius: 7px; padding: 7px 9px; }
+  input.num { width: 104px; font-family: var(--mono); font-size: 13px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; align-items: center; font-size: 13px; color: var(--muted); }
+  .chips button { font-family: var(--mono); font-size: 12px; padding: 4px 9px; border-radius: 999px; }
+  .cmd { margin-top: 12px; font-family: var(--mono); font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  td { padding: 7px 8px 7px 0; border-top: 1px solid var(--border); vertical-align: middle; }
+  tr:first-child td { border-top: 0; }
+  td.svc { font-family: var(--mono); font-size: 13px; white-space: nowrap; }
+  td.svc .dot { display: inline-block; margin-right: 8px; }
+  td.st { color: var(--muted); font-size: 13px; }
+  td.acts { text-align: right; white-space: nowrap; }
+  td.acts button { margin-left: 5px; }
+  .tablewrap { overflow-x: auto; }
+
+  textarea#env { width: 100%; min-height: 190px; font-family: var(--mono); font-size: 13px; line-height: 1.55; resize: vertical; }
+
+  .systems { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); gap: 12px; }
+  .sys { border: 1px solid var(--border); border-radius: 8px; padding: 13px; min-width: 0; }
+  .sys h3 { margin: 0 0 2px; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+  .sys h3 span.when { margin-left: auto; font-size: 12px; font-weight: 500; color: var(--muted); }
+  .sys p { margin: 0 0 8px; font-size: 13px; color: var(--muted); }
+  .sys dl { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 5px 10px; align-items: center; font-size: 13px; }
+  .sys dt { color: var(--muted); }
+  .sys dd { margin: 0; font-family: var(--mono); font-size: 12.5px; overflow-wrap: anywhere; }
+  .sys dd.plain { font-family: inherit; font-size: 13px; grid-column: span 2; }
+
+  .side section { margin-bottom: 0; padding: 0; overflow: hidden; }
+  .console-head { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  .console-head h2 { font-size: 14px; margin: 0; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .console { margin: 0; height: 420px; overflow: auto; background: var(--console-bg); color: var(--console-text);
+    font-family: var(--mono); font-size: 12px; line-height: 1.5; padding: 12px 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .console .c { color: var(--console-dim); } .console .h { color: #8fb4ff; font-weight: 600; }
+  .console .g { color: #6fd6a0; } .console .r { color: #ff8f85; }
+
+  #toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); background: var(--text); color: var(--bg);
+    padding: 9px 16px; border-radius: 8px; font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .2s; max-width: 90vw; }
+  #toast.show { opacity: 1; }
+  .offline { display: none; margin: 0 24px 16px; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--bad); color: var(--bad); background: var(--surface); }
+  .offline.show { display: block; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Painel do laboratório</h1>
+    <p>System Design na Prática · Aula 01 — Encurtador de links</p>
+  </div>
+  <div class="pills">
+    <span class="pill"><span class="dot" id="labDot"></span><span id="labPill">Lab —</span></span>
+    <span class="pill"><span class="dot" id="jobDot"></span><span id="jobPill">Ocioso</span></span>
+  </div>
+</header>
+<div class="offline" id="offline">Sem resposta do painel. Ele ainda está rodando? Suba de novo com <code>make painel</code>.</div>
+
+<div class="layout">
+  <main>
+    <section>
+      <h2>1. Suba um laboratório</h2>
+      <p class="hint">Troca o <code>.env</code> pelo do lab e recria os containers. Os dados e o histórico de métricas são mantidos, então dá para comparar antes e depois no mesmo gráfico.</p>
+      <div class="labs" id="labs"></div>
+    </section>
+
+    <section>
+      <h2>2. Aplique carga</h2>
+      <p class="hint">Roda o k6 contra o estágio que está no ar. Acompanhe pelo <a id="grafanaLink" href="http://localhost:3000" target="_blank" rel="noopener">Grafana</a>.</p>
+      <div class="chips" id="presets"></div>
+      <div class="row">
+        <label class="field">Cenário
+          <select id="script">
+            <option value="read">read — redirects constantes</option>
+            <option value="ramp">ramp — rampa em degraus</option>
+            <option value="write">write — criação de links</option>
+            <option value="mixed">mixed — leitura + "criei e cliquei"</option>
+          </select>
+        </label>
+        <span class="row" id="vars"></span>
+        <button class="primary" id="loadBtn">Iniciar carga</button>
+        <button class="danger" id="stopBtn" disabled>Parar</button>
+      </div>
+      <div class="cmd" id="loadCmd"></div>
+    </section>
+
+    <section>
+      <h2>3. Quebre alguma coisa</h2>
+      <p class="hint">Estado dos containers e as falhas usadas nos experimentos: matar uma instância, derrubar o banco, congelar ou esvaziar o cache.</p>
+      <div class="tablewrap"><table id="services"><tbody><tr><td class="st">Carregando…</td></tr></tbody></table></div>
+    </section>
+
+    <section>
+      <h2>4. Mude uma variável</h2>
+      <p class="hint">Este é o <code>.env</code> do estágio atual. Edite e aplique para recriar só os containers afetados.</p>
+      <textarea id="env" spellcheck="false" aria-label="Conteúdo do .env"></textarea>
+      <div class="row" style="margin-top:10px">
+        <button class="primary" id="applyBtn">Salvar e aplicar</button>
+        <button id="revertBtn" disabled>Descartar edição</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Sistemas e senhas</h2>
+      <p class="hint">Tudo o que o laboratório sobe, com endereço e credenciais. São senhas de laboratório, só válidas nesta máquina.</p>
+      <div class="systems" id="systems"></div>
+    </section>
+
+    <section>
+      <h2>Encerrar</h2>
+      <p class="hint">Parar mantém o banco e as métricas. Apagar remove os volumes: o banco volta aos 100 mil links iniciais e o histórico do Prometheus some.</p>
+      <div class="row">
+        <button id="downBtn">Parar tudo</button>
+        <button class="danger" id="resetBtn">Apagar tudo…</button>
+      </div>
+    </section>
+  </main>
+
+  <aside class="side">
+    <section>
+      <div class="console-head">
+        <h2 id="consoleTitle">Saída dos comandos</h2>
+        <button class="small" id="clearBtn">Limpar</button>
+      </div>
+      <pre class="console" id="console" aria-live="off"></pre>
+    </section>
+  </aside>
+</div>
+<div id="toast" role="status"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const el = (tag, props = {}, ...kids) => {
+  const n = Object.assign(document.createElement(tag), props);
+  kids.flat().forEach(k => k != null && n.append(k));
+  return n;
+};
+
+const LABS = [
+  { n: 1, tema: 'MVP', arch: 'cliente → app → Postgres', ver: 'O banco satura; latência e erros disparam.',
+    cargas: [['ramp', { MAX_RPS: 3000 }]] },
+  { n: 2, tema: 'Geração de IDs', arch: 'igual ao Lab 1, IDs aleatórios', ver: 'Colisões crescem conforme o espaço de códigos enche.',
+    cargas: [['write', { RPS: 400, DURATION: '2m' }]] },
+  { n: 3, tema: 'Cache', arch: 'app → Redis → Postgres', ver: 'Cache lento derruba tudo; cache frio devolve a carga ao banco.',
+    cargas: [['ramp', { MAX_RPS: 3000 }], ['read', { RPS: 1000, DURATION: '90s' }], ['read', { RPS: 1500, DURATION: '90s' }], ['read', { RPS: 1500, SKEW: 1, DURATION: '2m' }]] },
+  { n: 4, tema: 'Disponibilidade', arch: 'nginx → 3 apps → Redis + Postgres', ver: 'Instância morre; banco morre; quem sobrevive?',
+    cargas: [['read', { RPS: 1500, DURATION: '3m' }]] },
+  { n: 5, tema: 'Réplica de leitura', arch: 'escrita no primário, leitura na réplica', ver: 'Réplica atrasada: “criei o link e deu 404”.',
+    cargas: [['mixed', { RPS: 300, WRITE_RPS: 20, DURATION: '2m' }]] },
+  { n: 6, tema: 'Analytics', arch: 'Lab 4 + contagem de cliques', ver: 'Contar clique na requisição transforma leitura em escrita.',
+    cargas: [['read', { RPS: 150, DURATION: '1m' }], ['read', { RPS: 1500, DURATION: '1m' }]] },
+];
+const VARS = {
+  read:  [['RPS', 500, 'req/s'], ['DURATION', '2m', 'duração'], ['SKEW', '', 'SKEW (padrão 8)']],
+  ramp:  [['MAX_RPS', 3000, 'pico em req/s'], ['STEPS', '', 'degraus (padrão 6)'], ['STEP_DURATION', '', 'por degrau (padrão 30s)'], ['SKEW', '', 'SKEW (padrão 8)']],
+  write: [['RPS', 200, 'req/s'], ['DURATION', '2m', 'duração']],
+  mixed: [['RPS', 300, 'leituras/s'], ['WRITE_RPS', 20, 'escritas/s'], ['DURATION', '2m', 'duração'], ['SKEW', '', 'SKEW (padrão 8)']],
+};
+const CHAOS = ['app1', 'app2', 'app3', 'lb', 'pg', 'pg-replica', 'redis'];
+
+let S = null, since = 0, envDirty = false, renderedKey = '';
+
+// ---------- chamadas ----------
+async function post(path, body) {
+  try {
+    const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) });
+    const j = await r.json();
+    if (j.error) toast(j.error);
+    poll();
+    return !j.error;
+  } catch { toast('O painel não respondeu.'); return false; }
+}
+let toastTimer;
+function toast(msg) {
+  $('toast').textContent = msg; $('toast').classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => $('toast').classList.remove('show'), 3200);
+}
+function copy(text) {
+  (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(
+    () => toast('Copiado'), () => toast('Não consegui copiar; selecione o texto.'));
+}
+
+// ---------- labs ----------
+function renderLabs() {
+  $('labs').replaceChildren(...LABS.map(l => el('div', { className: 'lab' + (S.lab === l.n ? ' current' : '') },
+    el('h3', {}, `Lab ${l.n} — ${l.tema}`, S.lab === l.n ? el('small', {}, 'no .env agora') : null),
+    el('div', { className: 'arch' }, l.arch),
+    el('p', {}, l.ver),
+    el('button', { className: S.lab === l.n ? '' : 'primary', disabled: !!S.job, textContent: S.lab === l.n ? 'Subir de novo' : 'Subir',
+      onclick: () => post('/api/lab', { n: l.n }) }))));
+}
+
+// ---------- carga ----------
+function renderVars(values) {
+  const script = $('script').value;
+  $('vars').replaceChildren(...VARS[script].map(([k, def, hint]) =>
+    el('label', { className: 'field' }, `${k} · ${hint}`,
+      el('input', { className: 'num', id: 'v_' + k, value: values ? (values[k] ?? '') : def, oninput: renderCmd }))));
+  renderCmd();
+}
+function loadVars() {
+  const vars = {};
+  VARS[$('script').value].forEach(([k]) => { const v = $('v_' + k).value.trim(); if (v) vars[k] = v; });
+  return vars;
+}
+function renderCmd() {
+  const vars = Object.entries(loadVars()).map(([k, v]) => ` ${k}=${v}`).join('');
+  $('loadCmd').textContent = `Equivale a: make load SCRIPT=${$('script').value}${vars}`;
+}
+function renderPresets() {
+  const lab = LABS.find(l => l.n === S.lab);
+  if (!lab) return $('presets').replaceChildren();
+  $('presets').replaceChildren(`Do roteiro do Lab ${lab.n}:`, ...lab.cargas.map(([script, vars]) =>
+    el('button', { textContent: script + Object.entries(vars).map(([k, v]) => ` ${k}=${v}`).join(''),
+      onclick: () => { $('script').value = script; renderVars(vars); } })));
+}
+$('script').onchange = () => renderVars();
+$('loadBtn').onclick = () => post('/api/load', { script: $('script').value, vars: loadVars() });
+$('stopBtn').onclick = () => post('/api/stop');
+
+// ---------- serviços ----------
+function stateOf(s) {
+  if (s.state === 'paused') return ['warn', 'pausado'];
+  if (s.state === 'running') return s.health === 'unhealthy' ? ['bad', 'rodando, sem saúde'] : s.health === 'starting' ? ['warn', 'subindo'] : ['ok', 'rodando'];
+  if (s.state === 'exited' || s.state === 'dead') return ['bad', 'parado'];
+  return ['', s.state || '?'];
+}
+function renderServices() {
+  const busy = S.job && S.job.kind === 'stack';
+  const act = (label, service, action, cls = '') => el('button', { className: 'small ' + cls, disabled: busy, textContent: label,
+    onclick: () => post('/api/service', { service, action }) });
+  if (!S.services.length) {
+    return $('services').tBodies[0].replaceChildren(el('tr', {}, el('td', { className: 'st' },
+      S.servicesError ? 'Não consegui consultar o Docker: ' + S.servicesError : 'Nenhum container no ar. Suba um laboratório.')));
+  }
+  $('services').tBodies[0].replaceChildren(...S.services.map(s => {
+    const [cls, label] = stateOf(s);
+    const btns = [];
+    if (CHAOS.includes(s.service)) {
+      if (s.state === 'running') {
+        if (s.service === 'redis') btns.push(act('Esvaziar (FLUSHALL)', 'redis', 'flushall'));
+        btns.push(act('Pausar', s.service, 'pause'), act('Reiniciar', s.service, 'restart'), act('Matar', s.service, 'kill', 'danger'));
+      } else if (s.state === 'paused') btns.push(act('Retomar', s.service, 'unpause'));
+      else btns.push(act('Iniciar', s.service, 'start'));
+    }
+    return el('tr', {},
+      el('td', { className: 'svc' }, el('span', { className: 'dot ' + cls }), s.service),
+      el('td', { className: 'st', title: s.status }, label),
+      el('td', { className: 'acts' }, btns));
+  }));
+}
+
+// ---------- .env ----------
+$('env').oninput = () => { envDirty = $('env').value !== S.env; $('revertBtn').disabled = !envDirty; };
+$('revertBtn').onclick = () => { $('env').value = S.env; envDirty = false; $('revertBtn').disabled = true; };
+$('applyBtn').onclick = async () => {
+  if (await post('/api/apply', envDirty ? { env: $('env').value } : {})) { envDirty = false; $('revertBtn').disabled = true; }
+};
+
+// ---------- sistemas e senhas ----------
+function renderSystems() {
+  const p = S.ports, dc = S.dc, up = n => S.services.find(s => s.service === n);
+  const pgUrl = h => `postgres://shortener:shortener@${h}:5432/shortener`;
+  const list = [
+    { nome: 'Grafana', svc: 'grafana', desc: 'Dashboard “Encurtador de links — Aula 01” como página inicial.',
+      f: [['Endereço', `http://localhost:${p.grafana}`, 'link'], ['Login', 'Não pede login: acesso anônimo com papel Admin.', 'plain']] },
+    { nome: 'Prometheus', svc: 'prometheus', desc: 'Métricas da aplicação, do Postgres e do k6. Retenção de 2 dias.',
+      f: [['Endereço', `http://localhost:${p.prom}`, 'link'], ['Alvos', `http://localhost:${p.prom}/targets`, 'link'], ['Login', 'Sem autenticação.', 'plain']] },
+    { nome: 'Encurtador (app1)', svc: 'app1', desc: 'A aplicação em Go, acessada direto, sem balanceador.',
+      f: [['Endereço', `http://localhost:${p.app}`, 'copy'], ['Redirect', `http://localhost:${p.app}/s-42`, 'link'], ['Métricas', `http://localhost:${p.app}/metrics`, 'link'],
+          ['Criar link', `curl -s -XPOST localhost:${p.app}/api/links -d '{"url":"https://exemplo.com"}'`, 'copy'],
+          ['Ver cliques', `curl -s localhost:${p.app}/api/links/s-1`, 'copy'], ['Login', 'Sem autenticação.', 'plain']] },
+    { nome: 'Balanceador (nginx)', svc: 'lb', quando: 'Labs 4–6', desc: 'Round-robin entre app1, app2 e app3.',
+      f: [['Endereço', `http://localhost:${p.lb}`, 'copy'], ['Redirect', `http://localhost:${p.lb}/s-42`, 'link'], ['Login', 'Sem autenticação.', 'plain']] },
+    { nome: 'Postgres — primário', svc: 'pg', desc: 'Sem porta publicada: acesse por dentro do Docker.',
+      f: [['Host', 'pg:5432', 'copy'], ['Banco', 'shortener', 'copy'], ['Usuário', 'shortener', 'copy'], ['Senha', 'shortener', 'copy'],
+          ['URL', pgUrl('pg'), 'copy'], ['Abrir psql', `${dc} exec pg psql -U shortener shortener`, 'copy'],
+          ['Replicação', 'usuário replicator, senha replicator', 'plain']] },
+    { nome: 'Postgres — réplica', svc: 'pg-replica', quando: 'Lab 5', desc: 'Somente leitura, com atraso proposital.',
+      f: [['Host', 'pg-replica:5432', 'copy'], ['Banco', 'shortener', 'copy'], ['Usuário', 'shortener', 'copy'], ['Senha', 'shortener', 'copy'],
+          ['URL', pgUrl('pg-replica'), 'copy'], ['Abrir psql', `${dc} exec pg-replica psql -U shortener shortener`, 'copy']] },
+    { nome: 'Redis', svc: 'redis', desc: 'Cache dos Labs 3–6. Sem porta publicada e sem persistência.',
+      f: [['Host', 'redis:6379', 'copy'], ['Senha', 'Sem senha.', 'plain'], ['Abrir redis-cli', `${dc} exec redis redis-cli`, 'copy']] },
+    { nome: 'Exportadores e k6', desc: 'Sem interface. O postgres-exporter usa shortener / shortener; o k6 grava as métricas no Prometheus.',
+      f: [['pg-exporter', 'pg-exporter:9187', 'copy'], ['k6', 'sobe só durante a carga', 'plain']] },
+  ];
+  $('systems').replaceChildren(...list.map(sys => {
+    const s = sys.svc && up(sys.svc), [cls] = s ? stateOf(s) : [''];
+    const dl = el('dl');
+    sys.f.forEach(([k, v, kind]) => {
+      dl.append(el('dt', {}, k));
+      if (kind === 'plain') dl.append(el('dd', { className: 'plain' }, v));
+      else if (kind === 'link') dl.append(el('dd', {}, el('a', { href: v, target: '_blank', rel: 'noopener', textContent: v })),
+        el('button', { className: 'small', textContent: 'Copiar', onclick: () => copy(v) }));
+      else dl.append(el('dd', {}, v), el('button', { className: 'small', textContent: 'Copiar', onclick: () => copy(v) }));
+    });
+    return el('div', { className: 'sys' },
+      el('h3', {}, sys.svc ? el('span', { className: 'dot ' + cls, title: s ? stateOf(s)[1] : 'fora do ar' }) : null, sys.nome,
+        sys.quando ? el('span', { className: 'when' }, sys.quando) : null),
+      el('p', {}, sys.desc), dl);
+  }));
+}
+
+// ---------- encerrar ----------
+$('downBtn').onclick = () => post('/api/down');
+let resetArmed;
+$('resetBtn').onclick = () => {
+  if ($('resetBtn').dataset.armed) { delete $('resetBtn').dataset.armed; $('resetBtn').textContent = 'Apagar tudo…'; clearTimeout(resetArmed); return post('/api/reset'); }
+  $('resetBtn').dataset.armed = '1'; $('resetBtn').textContent = 'Clique de novo para apagar banco e métricas';
+  resetArmed = setTimeout(() => { delete $('resetBtn').dataset.armed; $('resetBtn').textContent = 'Apagar tudo…'; }, 5000);
+};
+
+// ---------- console ----------
+function appendLog(lines) {
+  if (!lines.length) return;
+  const c = $('console'), stick = c.scrollHeight - c.scrollTop - c.clientHeight < 40;
+  const frag = document.createDocumentFragment();
+  lines.forEach(l => {
+    const cls = l.startsWith('$ ') ? 'c' : l.startsWith('━━') ? 'h' : l.startsWith('✓') ? 'g' : /^(✗|■|erro)/.test(l) ? 'r' : '';
+    frag.append(cls ? el('span', { className: cls }, l) : l, '\n');
+  });
+  c.append(frag);
+  while (c.childNodes.length > 6000) c.firstChild.remove();
+  if (stick) c.scrollTop = c.scrollHeight;
+}
+$('clearBtn').onclick = () => $('console').replaceChildren();
+
+// ---------- ciclo ----------
+function render() {
+  const lab = LABS.find(l => l.n === S.lab);
+  $('labPill').textContent = lab ? `Lab ${lab.n} — ${lab.tema}` : 'Nenhum lab no .env';
+  const running = S.services.filter(s => s.state === 'running').length;
+  $('labDot').className = 'dot ' + (running ? (S.services.some(s => stateOf(s)[0] === 'bad' || stateOf(s)[0] === 'warn') ? 'warn' : 'ok') : '');
+  $('jobDot').className = 'dot ' + (S.job ? 'busy' : '');
+  $('jobPill').textContent = S.job ? S.job.name + '…' : 'Ocioso';
+  $('consoleTitle').textContent = S.job ? 'Rodando: ' + S.job.name : 'Saída dos comandos';
+  $('loadBtn').disabled = $('applyBtn').disabled = $('downBtn').disabled = $('resetBtn').disabled = !!S.job;
+  $('stopBtn').disabled = !S.job;
+  $('stopBtn').textContent = S.job && S.job.kind !== 'load' ? 'Interromper tarefa' : 'Parar';
+  $('grafanaLink').href = `http://localhost:${S.ports.grafana}`;
+  if (!envDirty && $('env').value !== S.env && document.activeElement !== $('env')) $('env').value = S.env;
+
+  // Só redesenha as listas quando algo mudou, para não roubar foco nem clique.
+  const key = JSON.stringify([S.lab, S.job, S.services, S.servicesError, S.ports, S.dc]);
+  if (key !== renderedKey) { renderedKey = key; renderLabs(); renderPresets(); renderServices(); renderSystems(); }
+}
+let polling = false;
+async function poll() {
+  if (polling) return; polling = true;
+  try {
+    const r = await fetch('/api/state?since=' + since);
+    S = await r.json(); since = S.next;
+    $('offline').classList.remove('show');
+    appendLog(S.log); render();
+  } catch { $('offline').classList.add('show'); }
+  polling = false;
+}
+renderVars();
+poll();
+setInterval(poll, 1500);
+</script>
+</body>
+</html>
