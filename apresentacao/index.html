@@ -1,0 +1,631 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aula 01 · Encurtador de links: do MVP à escala global</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;display=swap">
+<style>
+:root{--ink:#0E1726;--ink2:#16233A;--line-d:#2A3B57;--paper:#F4F1EA;--card:#FBFAF6;--line:#DDD6C8;--soft:#4A5568;--soft-d:#C3CFDF;--or:#F28C28;--or-t:#A84A0A;--bl:#4C8DF6;--bl-t:#2C5FB8;--code:#0B1220;}
+section{padding:128px;background:var(--paper);color:var(--soft);font-family:'Inter',Arial,sans-serif;display:flex;flex-direction:column;}
+section.dark{background:var(--ink);color:var(--soft-d);}
+section.accent{background:var(--or);color:var(--ink);}
+h1,h2,h3{font-family:'Space Grotesk',Arial,sans-serif;color:var(--ink);margin:0;}
+.dark h1,.dark h2,.dark h3{color:var(--paper);}
+h1{font-size:120px;font-weight:700;line-height:1.02;letter-spacing:-2px;}
+h2{font-size:64px;font-weight:700;line-height:1.1;letter-spacing:-1px;margin-bottom:44px;}
+h3{font-size:40px;font-weight:600;line-height:1.15;}
+p{font-size:30px;line-height:1.4;margin:0;}
+ul{font-size:30px;line-height:1.4;margin:0;padding-left:36px;}
+li{margin-bottom:10px;}
+.eyebrow{font-size:24px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--or-t);margin-bottom:20px;}
+.dark .eyebrow{color:var(--or);}
+.accent .eyebrow{color:var(--ink);}
+.lead{font-size:40px;line-height:1.3;}
+.small{font-size:24px;line-height:1.4;}
+.ink{color:var(--ink);}
+.paper{color:var(--paper);}
+.hl{color:var(--or-t);font-weight:600;}
+.dark .hl{color:var(--or);}
+.row{display:flex;gap:32px;}
+.col{display:flex;flex-direction:column;gap:16px;flex:1;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:32px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:32px;}
+.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:32px;}
+.card{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:32px 36px;display:flex;flex-direction:column;gap:12px;animation:rise 500ms ease-out both;animation-delay:calc(var(--i,0) * 110ms);}
+.dark .card{background:var(--ink2);border-color:var(--line-d);}
+.card.hot{border-color:var(--or);}
+.card.dashed{border-style:dashed;background:transparent;}
+.card .ct{font-family:'Space Grotesk',Arial,sans-serif;font-size:40px;font-weight:600;line-height:1.15;color:var(--ink);}
+.dark .card .ct{color:var(--paper);}
+.num{font-family:'Space Grotesk',Arial,sans-serif;font-size:64px;font-weight:700;line-height:1.05;color:var(--or-t);}
+.dark .num{color:var(--or);}
+.huge{font-family:'Space Grotesk',Arial,sans-serif;font-size:120px;font-weight:700;line-height:1;color:var(--or-t);letter-spacing:-2px;}
+.dark .huge{color:var(--or);}
+.accent .huge{color:var(--ink);}
+.idx{font-family:'JetBrains Mono','Courier New',monospace;font-size:24px;font-weight:600;color:var(--or-t);}
+.dark .idx{color:var(--or);}
+.code{font-family:'JetBrains Mono','Courier New',monospace;font-size:24px;line-height:1.55;background:var(--code);color:#E6EDF6;border-radius:16px;padding:28px 32px;border:2px solid #1D2A42;}
+.k{color:#F5A55B;}
+.s{color:#8BD3A8;}
+.c{color:#8593AB;}
+.pill{font-size:24px;line-height:1.2;padding:10px 22px;border-radius:40px;border:2px solid var(--line-d);color:var(--paper);}
+.pills{display:flex;flex-wrap:wrap;gap:14px;}
+.tbl{width:100%;font-size:26px;color:var(--ink);}
+.dark .tbl{color:var(--paper);}
+.tbl-s{width:100%;font-size:24px;color:var(--ink);}
+.dark .tbl-s{color:var(--paper);}
+tr.band{background:#F6E2CC;}
+.dark tr.band{background:#2A2418;}
+.fnode{flex:1;box-sizing:border-box;background:var(--ink2);border:2px solid var(--line-d);border-radius:16px;padding:24px 28px;display:flex;flex-direction:column;gap:6px;}
+.fnode.hot{border-color:var(--or);}
+.lnode{flex:1;box-sizing:border-box;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:24px 28px;display:flex;flex-direction:column;gap:6px;}
+.lnode.hot{border-color:var(--or-t);}
+.nt{font-family:'Space Grotesk',Arial,sans-serif;font-size:30px;font-weight:600;line-height:1.2;color:var(--paper);}
+.lnode .nt{color:var(--ink);}
+.lnode.pin .nt{color:var(--ink);}
+.ns{font-size:24px;line-height:1.3;color:var(--soft-d);}
+.lnode .ns{color:var(--soft);}
+.pin{position:absolute;box-sizing:border-box;background:var(--ink2);border:2px solid var(--line-d);border-radius:16px;padding:18px 24px;display:flex;flex-direction:column;gap:4px;}
+.pin.hot{border-color:var(--or);}
+.lnode.pin{background:var(--card);border-color:var(--line);}
+.lnode.pin.hot{border-color:var(--or-t);}
+.conn{color:#6F84A6;border-width:3px;}
+.conn-l{color:#8A8170;border-width:3px;}
+.labtag{font-family:'Space Grotesk',Arial,sans-serif;font-size:120px;font-weight:700;line-height:1;color:var(--or);letter-spacing:-2px;}
+.labside{width:520px;display:flex;flex-direction:column;gap:20px;}
+.dark .card.q{background:#1F2B20;border-color:#3E5A3F;}
+.fragment{opacity:0;}
+.fragment.visible{opacity:1;transition:opacity 400ms ease-out;}
+.fill{flex:1;}
+.stat{justify-content:space-between;}
+.code-lg{font-size:28px;}
+.big{min-height:200px;justify-content:center;padding:32px 32px;}
+@keyframes rise{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+html,body{margin:0;height:100%;background:#05080F;overflow:hidden;}
+#stage{position:absolute;left:50%;top:50%;width:1920px;height:1080px;transform-origin:0 0;}
+#stage>section{position:absolute;inset:0;width:1920px;height:1080px;box-sizing:border-box;overflow:hidden;display:none;}
+#stage>section.on{display:flex;}
+section>aside{display:none;}
+table{border-collapse:collapse;}
+th,td{text-align:left;vertical-align:top;padding:.35em .6em;line-height:1.4;border-bottom:2px solid var(--line);}
+th{font-family:'Space Grotesk',Arial,sans-serif;font-weight:600;}
+.dark th,.dark td{border-color:var(--line-d);}
+x-connector{display:block;flex:none;position:relative;}
+x-connector svg{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;}
+#hud{position:fixed;right:16px;bottom:10px;font:14px Inter,Arial,sans-serif;color:#8593AB;opacity:.7;user-select:none;}
+#notes{position:fixed;left:0;right:0;bottom:0;max-height:34%;overflow:auto;background:rgba(5,8,15,.94);color:#E6EDF6;font:20px/1.5 Inter,Arial,sans-serif;padding:20px 32px;white-space:pre-wrap;display:none;border-top:2px solid #2A3B57;}
+body.notes #notes{display:block;}
+@media print{
+ @page{size:1920px 1080px;margin:0;}
+ html,body{height:auto;overflow:visible;background:none;}
+ #stage{position:static;transform:none!important;width:auto;height:auto;}
+ #stage>section{position:relative;display:flex;break-after:page;}
+ .fragment{opacity:1!important;} .card{animation:none!important;}
+ #hud,#notes{display:none!important;}
+}
+</style>
+</head>
+<body>
+<div id="stage">
+<section id="cover" class="dark" data-transition="fade">
+<p class="eyebrow">System Design na Prática · Aula 01 · 25/11</p>
+<h1>Encurtador de links</h1>
+<p class="lead paper" style="margin-top:20px">Do MVP à escala global</p>
+<div style="flex:1"></div>
+<div class="row" style="align-items:center;gap:28px;margin-bottom:48px">
+<p class="code" style="font-size:24px">https://technapratica.com.br/system-design.html</p>
+<x-connector style="width:96px;height:0;color:#F28C28;border-width:3px"></x-connector>
+<p class="code" style="font-size:40px;color:#F28C28;padding:18px 32px">enc.ta/aZ3k9Qx</p>
+</div>
+<div class="pills"><p class="pill">Requisitos</p><p class="pill">Estimativas</p><p class="pill">Geração de IDs</p><p class="pill">Cache</p><p class="pill">Disponibilidade</p><p class="pill">Banco de dados</p><p class="pill">Analytics</p></div>
+<aside>• Boas-vindas à turma; apresentação rápida (quem sou, por que system design na prática).
+• Formato: 8 casos reais, 2h cada, quartas 19h–21h, com replay.
+• Hoje é o caso clássico de entrevista: ele serve para fixar o MÉTODO que vamos repetir nas 8 aulas.
+• Avisar: teremos 6 laboratórios com Docker + Grafana; quem não subiu o kit, sobe agora (Lab 0 no README).</aside>
+</section>
+<section id="metodo">
+<p class="eyebrow">O método das 8 aulas</p>
+<h2>Todo caso segue o mesmo roteiro</h2>
+<div class="g4 fill">
+<div class="card" style="--i:0"><p class="idx">01</p><p class="ct">Requisitos</p><p>O que o sistema faz e com que qualidade.</p><p class="ink" style="margin-top:auto"><b>Saída:</b> verbos + metas com número.</p></div><div class="card" style="--i:1"><p class="idx">02</p><p class="ct">Estimativas</p><p>Os números que mudam o desenho.</p><p class="ink" style="margin-top:auto"><b>Saída:</b> req/s, TB, GB de cache.</p></div><div class="card" style="--i:2"><p class="idx">03</p><p class="ct">Arquitetura</p><p>O desenho mais simples que atende.</p><p class="ink" style="margin-top:auto"><b>Saída:</b> caixas e setas que você defende.</p></div><div class="card" style="--i:3"><p class="idx">04</p><p class="ct">Evolução</p><p>O que quebra ao crescer, e quanto custa cada correção.</p><p class="ink" style="margin-top:auto"><b>Saída:</b> decisão × ganho × custo.</p></div>
+</div>
+<p class="lead ink" style="margin-top:56px">Hoje no caso mais clássico de entrevista.<br>Nas próximas 7 aulas, em casos cada vez mais difíceis.</p>
+<aside>• O erro nº 1 em entrevista e no trabalho: pular direto para o desenho ("vou usar Kafka").
+• Requisitos definem o problema; estimativas dizem se o problema é de 10 req/s ou de 100 mil req/s.
+• Arquitetura começa SIMPLES. Complexidade só entra quando um número justifica.
+• Evolução é onde mora o aprendizado: cada correção tem um trade-off. Vamos ver isso no Grafana, não só no slide.</aside>
+</section>
+<section id="agenda">
+<p class="eyebrow">Agenda</p>
+<h2>Hoje, em 2 horas</h2>
+<table class="tbl" style="font-size:30px">
+<tr><th style="width:16%">Horário</th><th style="width:60%">Bloco</th><th>Laboratório</th></tr>
+<tr><td>19:00</td><td>O caso e o método</td><td></td></tr><tr><td>19:10</td><td>Requisitos e estimativas</td><td></td></tr><tr class="band"><td>19:30</td><td>API e o MVP</td><td>Lab 1</td></tr><tr class="band"><td>19:45</td><td>Geração de IDs</td><td>Lab 2</td></tr><tr class="band"><td>20:05</td><td>Banco de dados e cache</td><td>Labs 3 e 4</td></tr><tr class="band"><td>20:30</td><td>Analytics</td><td>Lab 5</td></tr><tr class="band"><td>20:45</td><td>Disponibilidade</td><td>Lab 6</td></tr><tr><td>20:55</td><td>Escala global e fechamento</td><td></td></tr>
+</table>
+<aside>• Ritmo: ~15 min de conceito, ~10 min de laboratório, alternando.
+• Os labs são curtos de propósito: mudar UMA alavanca e observar.
+• Se o notebook de alguém não aguentar a carga, acompanhar pelo meu Grafana na tela.
+• Guardar 5 min no fim para dúvidas e a próxima aula.</aside>
+</section>
+<section id="caso" class="dark">
+<p class="eyebrow">O caso</p>
+<div style="flex:1"></div>
+<h2 style="font-size:64px;max-width:1500px">Um link curto parece trivial.<br>Até 100 mil pessoas clicarem nele no mesmo segundo.</h2>
+<p class="lead" style="max-width:1400px">Encurta: uma startup fictícia. Começa com 1 dev e 1 servidor. Termina numa campanha de Black Friday em rede nacional.</p>
+<div style="flex:1"></div>
+<aside>• Storytelling da aula: vamos acompanhar o Encurta crescer.
+• Fase 1: MVP para uns poucos clientes. Fase 2: clientes de marketing. Fase 3: um link viral na TV.
+• Pergunta para a turma: o que pode quebrar num sistema que só faz um SELECT por chave?
+• Anotar as respostas no quadro e voltar a elas no fim.</aside>
+</section>
+<section id="req-func">
+<p class="eyebrow">01 · Requisitos</p>
+<h2>O que o Encurta faz</h2>
+<div class="g3 fill">
+<div class="card" style="--i:0"><p class="ct">Encurtar</p><p>POST com a URL longa, recebe um código curto.</p></div><div class="card" style="--i:1"><p class="ct">Redirecionar</p><p>GET /código responde 302 para a URL original.</p></div><div class="card" style="--i:2"><p class="ct">Alias próprio</p><p>enc.ta/black-friday, escolhido pelo cliente.</p></div><div class="card" style="--i:3"><p class="ct">Expiração</p><p>Links com prazo de validade.</p></div><div class="card" style="--i:4"><p class="ct">Analytics</p><p>Quantos cliques cada link recebeu.</p></div><div class="card dashed" style="--i:5"><p class="ct">Fora de escopo hoje</p><p>Contas e login, edição de links, QR code, antifraude.</p></div>
+</div>
+<aside>• Requisitos funcionais = verbos. Cinco verbos, nada mais.
+• Deixar explícito o que fica FORA. Em entrevista isso mostra maturidade e economiza tempo.
+• Alias e expiração parecem detalhe, mas mudam o desenho (unicidade global, invalidação de cache).
+• Analytics é o requisito traiçoeiro: vai aparecer de novo no Lab 5.</aside>
+</section>
+<section id="req-nfunc">
+<p class="eyebrow">01 · Requisitos</p>
+<h2>Com que qualidade</h2>
+<div class="g4 fill">
+<div class="card stat" style="--i:0"><p class="num">&lt; 50 ms</p><p>p99 do redirect. É o produto: ninguém espera um link.</p></div><div class="card stat" style="--i:1"><p class="num">99,99%</p><p>Disponibilidade do redirect. ≈ 52 minutos fora por ano.</p></div><div class="card stat" style="--i:2"><p class="num">Zero</p><p>Colisões: um código nunca aponta para dois destinos.</p></div><div class="card stat" style="--i:3"><p class="num">100 : 1</p><p>Leituras para cada escrita. O sistema é de leitura.</p></div>
+</div>
+<p class="lead ink" style="margin-top:56px">E mais um: <span class="hl">não enumerável</span>. Ninguém deve conseguir listar todos os links chutando códigos.</p>
+<aside>• Requisitos não funcionais = adjetivos com número. 'Rápido' não vale; 'p99 &lt; 50 ms' vale.
+• Diferenciar: disponibilidade do REDIRECT (crítico) vs. do analytics (pode atrasar).
+• 100:1 é a premissa mais importante do dia: otimizar leitura.
+• Não enumerável: links privados (documentos, convites) vazam se o código for sequencial.</aside>
+</section>
+<section id="perguntas" class="dark">
+<p class="eyebrow">01 · Requisitos</p>
+<h2>Pergunte antes de desenhar</h2>
+<div class="g2 fill">
+<div class="card" style="--i:0"><p class="paper" style="font-size:40px;line-height:1.25">Quantos links novos por mês?</p></div><div class="card" style="--i:1"><p class="paper" style="font-size:40px;line-height:1.25">Quantos cliques por link, na média e no pico?</p></div><div class="card" style="--i:2"><p class="paper" style="font-size:40px;line-height:1.25">Links expiram? Podem ser apagados?</p></div><div class="card" style="--i:3"><p class="paper" style="font-size:40px;line-height:1.25">O analytics precisa ser em tempo real?</p></div><div class="card" style="--i:4"><p class="paper" style="font-size:40px;line-height:1.25">O código pode ser previsível?</p></div><div class="card" style="--i:5"><p class="paper" style="font-size:40px;line-height:1.25">Multi-região desde o dia 1?</p></div>
+</div>
+<aside>• Em entrevista, estas perguntas valem pontos. No trabalho, valem meses.
+• Cada pergunta muda uma decisão: tempo real → streaming; previsível → estratégia de ID; multi-região → banco.
+• Exercício rápido: em duplas, 2 minutos, escolham a pergunta que mais muda a arquitetura.
+• Minha resposta: 'pico de cliques'. É ela que vai derrubar o MVP.</aside>
+</section>
+<section id="estimativas">
+<p class="eyebrow">02 · Estimativas</p>
+<h2>Premissas → números</h2>
+<div class="row" style="gap:48px">
+<div class="card" style="--i:0;width:600px">
+<p class="ct">Premissas</p>
+<ul class="ink"><li>100 mi links novos por mês</li><li>Leitura : escrita = 100 : 1</li><li>Retenção de 5 anos</li><li>~500 bytes por link</li><li>Pico = 5× a média</li></ul>
+</div>
+<div class="g2" style="flex:1">
+<div class="card" style="--i:1"><p class="num">~40/s</p><p>escritas (100 mi ÷ 2,6 mi s)</p></div><div class="card" style="--i:2"><p class="num">~4.000/s</p><p>leituras na média</p></div><div class="card" style="--i:3"><p class="num">~20.000/s</p><p>leituras no pico</p></div><div class="card" style="--i:4"><p class="num">6 bi</p><p>links em 5 anos</p></div>
+</div>
+</div>
+<aside>• Fazer as contas AO VIVO no quadro: um mês ≈ 2,6 milhões de segundos.
+• 100 mi ÷ 2,6 mi ≈ 38 escritas/s. Ridículo. Escrita não é o problema.
+• ×100 → ~3.900 leituras/s; pico ×5 → ~20 mil/s. Aqui está o problema.
+• Arredondar sem medo: estimativa serve para escolher a ordem de grandeza, não para planilha.</aside>
+</section>
+<section id="estimativas-2">
+<p class="eyebrow">02 · Estimativas</p>
+<h2>Armazenamento, cache e banda</h2>
+<div class="g3 fill">
+<div class="card" style="--i:0"><p class="ct">Armazenamento</p><p class="code">6 bi × 500 B</p><p class="num">≈ 3 TB</p><p>Sem réplicas. Cabe num banco, mas não numa máquina pequena.</p></div><div class="card" style="--i:1"><p class="ct">Cache</p><p class="code">330 mi cliques/dia<br>× 20% × 500 B</p><p class="num">≈ 33 GB</p><p>Os links quentes cabem em memória.</p></div><div class="card" style="--i:2"><p class="ct">Banda de saída</p><p class="code">20.000/s × 500 B</p><p class="num">≈ 10 MB/s</p><p>No pico. Trivial.</p></div>
+</div>
+<p class="lead ink" style="margin-top:44px">O problema não é tamanho. É <span class="hl">latência sob volume de leitura</span>.</p>
+<aside>• Regra 80/20: 20% dos links concentram ~80% dos cliques. Daí o 'cachear 20%'.
+• 33 GB cabem num único nó Redis grande ou em 2–3 nós menores. Isso já decide: vamos ter cache.
+• 3 TB em 5 anos: dá para começar em Postgres; o limite vai aparecer depois.
+• Banda: resposta 302 é minúscula; não precisamos de CDN por banda, e sim por latência (fim da aula).</aside>
+</section>
+<section id="espaco-ids" class="dark">
+<p class="eyebrow">02 · Estimativas</p>
+<h2>Quantos caracteres no código?</h2>
+<p style="margin-bottom:40px">Base62 = a–z, A–Z, 0–9. Precisamos de <span class="hl">6 bilhões</span> de códigos em 5 anos.</p>
+<div class="g3 fill">
+<div class="card stat" style="--i:0"><p class="ct">6 caracteres</p><p class="num">56,8 bi</p><p>Cabe no papel. Folga de ~9×.</p></div><div class="card hot stat" style="--i:1"><p class="ct">7 caracteres</p><p class="num">3,5 tri</p><p>Folga de ~580×. Nossa escolha.</p></div><div class="card stat" style="--i:2"><p class="ct">8 caracteres</p><p class="num">218 tri</p><p>Sobra. Mas cada caractere pesa no link.</p></div>
+</div>
+<aside>• 62^6 ≈ 56,8 bi; 62^7 ≈ 3,5 tri; 62^8 ≈ 218 tri.
+• Por que não 6? Porque com geração aleatória, quanto mais cheio o espaço, mais colisões (próxima seção).
+• 7 caracteres: ainda curto para SMS/QR e com folga para aleatoriedade.
+• Gancho: 'folga de 580×' parece muito. Vamos ver que colisão aparece muito antes.</aside>
+</section>
+<section id="api">
+<p class="eyebrow">03 · Arquitetura</p>
+<h2>A API inteira cabe num slide</h2>
+<div class="g2">
+<div class="col"><h3>Criar</h3>
+<p class="code code-lg"><span class="k">POST</span> /api/shorten<br>{<br>&#160;&#160;<span class="s">"url"</span>: <span class="s">"https://loja.com/ofertas?utm=tv"</span>,<br>&#160;&#160;<span class="s">"alias"</span>: <span class="s">"black-friday"</span>,&#160;&#160;<span class="c">// opcional</span><br>&#160;&#160;<span class="s">"expires_in_seconds"</span>: 86400 <span class="c">// opcional</span><br>}<br><span class="c">→ 201 {"code": "aZ3k9Qx"}</span></p>
+</div>
+<div class="col"><h3>Usar</h3>
+<p class="code code-lg"><span class="k">GET</span> /aZ3k9Qx<br><br><span class="c">← 302 Found</span><br>Location: https://loja.com/ofertas?utm=tv<br><br><span class="c">← 404 se não existe</span><br><span class="c">← 410 se expirou (no lab: 404)</span></p>
+</div>
+</div>
+<aside>• Duas rotas. O sistema inteiro é sobre a segunda ficar rápida.
+• Alias: o cliente escolhe; conflito → 409. Precisa de unicidade global (lembrar no multi-região).
+• Expiração: a API aceita; quem garante é o redirect (e o cache, desafio extra do README).
+• Mostrar no terminal: curl -si localhost:8080/&lt;código&gt; | head -5.</aside>
+</section>
+<section id="301-302">
+<p class="eyebrow">03 · Arquitetura</p>
+<h2>301 ou 302?</h2>
+<table class="tbl" style="font-size:32px">
+<tr><th style="width:34%"></th><th style="width:33%">301 · permanente</th><th>302 · temporário</th></tr>
+<tr><td>O navegador guarda o destino?</td><td>Sim</td><td>Não</td></tr>
+<tr><td>Cliques que passam por nós</td><td>Só o primeiro</td><td>Todos</td></tr>
+<tr><td>Analytics</td><td>Incompleto</td><td>Completo</td></tr>
+<tr><td>Carga no servidor</td><td>Menor</td><td>Maior</td></tr>
+<tr><td>Trocar o destino depois</td><td>Difícil</td><td>Fácil</td></tr>
+</table>
+<p class="lead ink" style="margin-top:44px">Escolha do Encurta: <span class="hl">302</span>. Analytics é produto.</p>
+<aside>• Primeiro trade-off de verdade da aula: custo vs. dado.
+• 301 = o navegador nunca mais pergunta. Economiza infra, mas cegamos o analytics.
+• Empresas reais: Bitly usa 301; muitos encurtadores de marketing usam 302. Não há resposta única.
+• Desafio extra do README: trocar REDIRECT_STATUS=301 e ver no DevTools.</aside>
+</section>
+<section id="mvp" class="dark">
+<p class="eyebrow">03 · Arquitetura · MVP</p>
+<h2>O MVP: o mais simples que funciona</h2>
+<div class="row" style="gap:0;align-items:stretch;margin-top:40px">
+<div class="fnode big"><p class="nt">Usuário</p><p class="ns">clica no link</p></div><x-connector class="conn" style="width:96px;height:0;align-self:center"></x-connector><div class="fnode big"><p class="nt">nginx</p><p class="ns">balanceador</p></div><x-connector class="conn" style="width:96px;height:0;align-self:center"></x-connector><div class="fnode hot big"><p class="nt">App × 2</p><p class="ns">FastAPI, stateless</p></div><x-connector class="conn" style="width:96px;height:0;align-self:center"></x-connector><div class="fnode big"><p class="nt">Postgres</p><p class="ns">1 tabela</p></div>
+</div>
+<div class="g2 fill" style="margin-top:56px">
+<div class="card" style="--i:0"><p class="ct">A cada redirect</p><p>1 SELECT para achar a URL<br>+ 1 UPDATE para contar o clique</p></div><div class="card hot" style="--i:1"><p class="ct">Funciona lindamente…</p><p>…até o primeiro pico. O Lab 1 mostra onde dobra.</p></div>
+</div>
+<aside>• Já começamos com 2 réplicas: app stateless é barato e evita a discussão de 'ponto único' cedo demais.
+• O banco é o único estado. Guarde isso.
+• Cada redirect faz DUAS idas ao banco. A segunda (contar o clique) é a que vai doer.
+• No kit simulamos 10 ms de rede até o banco (DB_EXTRA_LATENCY_MS), como num banco gerenciado em outra zona.</aside>
+</section>
+<section id="modelo">
+<p class="eyebrow">03 · Arquitetura · MVP</p>
+<h2>Uma tabela, uma chave</h2>
+<div class="row" style="gap:48px">
+<div style="width:880px">
+<p class="code code-lg"><span class="k">CREATE TABLE</span> links (<br>&#160;&#160;code&#160;&#160;&#160;&#160;&#160;&#160;&#160;VARCHAR(16) <span class="k">PRIMARY KEY</span>,<br>&#160;&#160;url&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;TEXT <span class="k">NOT NULL</span>,<br>&#160;&#160;created_at TIMESTAMPTZ <span class="k">DEFAULT</span> now(),<br>&#160;&#160;expires_at TIMESTAMPTZ,<br>&#160;&#160;clicks&#160;&#160;&#160;&#160;&#160;BIGINT <span class="k">DEFAULT</span> 0<br>];<br><br><span class="c">-- redirect: lookup pela chave</span><br><span class="k">SELECT</span> url <span class="k">FROM</span> links <span class="k">WHERE</span> code = $1;</p>
+</div>
+<div class="col" style="gap:32px">
+<div class="card" style="--i:0"><p class="ct">code é a chave</p><p>O redirect é um lookup por chave primária: O(log n), sem joins.</p></div><div class="card hot" style="--i:1"><p class="ct">clicks mora na linha</p><p>Guarde esta coluna. Num link viral, todo mundo disputa a mesma linha.</p></div>
+</div>
+</div>
+<aside>• Modelo mínimo: a chave de acesso É a chave primária.
+• Padrão de acesso puramente chave → valor. Isso vai pesar na escolha do banco (seção 05).
+• Pedir para a turma achar o problema escondido: o 'clicks' na mesma linha da URL.
+• Num link viral, milhares de UPDATE por segundo na MESMA linha = disputa de lock + 1 commit por clique.</aside>
+</section>
+<section id="lab1" class="dark">
+<div class="row" style="gap:64px;flex:1">
+<div class="labside">
+<p class="eyebrow">Laboratório · 10 min</p>
+<p class="labtag">LAB 1</p>
+<h3>O MVP sob carga</h3>
+<p class="small">Grafana: localhost:3000 · roteiro completo no README do kit</p>
+</div>
+<div class="col" style="gap:28px">
+<p class="code"><span class="c"># configuração padrão do .env</span><br>docker compose run --rm -e PERFIL=pico \<br>&#160;&#160;-e PEAK=1500 k6 run /scripts/trafego.js</p>
+<div class="card" style="--i:1;padding:28px 36px"><p class="ct">Observe no Grafana</p><ul><li>Duas idas ao banco por redirect</li><li>O pool de conexões encosta no limite e forma fila</li><li>p99 descola do p50 antes de aparecer erro</li></ul></div>
+
+<div class="card q" style="--i:2;padding:24px 32px"><p class="paper"><b>Pergunta:</b> 20 conexões ÷ (2 consultas × 11 ms) ≈ 900 req/s. Bateu com o painel?</p></div>
+</div>
+</div>
+<aside>• Rodar junto com a turma; mostrar o painel '2 · Banco de dados'.
+• No meu teste com UMA instância: 300 req/s → p95 26 ms; 700 req/s → p95 5,4 s. O sistema não degrada aos poucos: ele dobra.
+• A fila aparece antes do erro: threads do servidor e pool de conexões.
+• Pergunta-bônus: aumentar DB_POOL_SIZE para 50 resolve? (Desloca o gargalo para o banco.)</aside>
+</section>
+<section id="ids">
+<p class="eyebrow">04 · Geração de IDs</p>
+<h2>Cinco jeitos de gerar o código</h2>
+<table class="tbl">
+<tr><th style="width:26%">Estratégia</th><th style="width:17%">Colisão</th><th style="width:20%">Coordenação</th><th style="width:25%">Previsível?</th><th>Tamanho</th></tr>
+<tr class="band"><td>Aleatório base62</td><td>Possível → retry</td><td>Nenhuma</td><td>Não</td><td>7</td></tr><tr><td>Hash da URL truncado</td><td>Possível → sal</td><td>Nenhuma</td><td>Mesma URL, mesmo código</td><td>7</td></tr><tr><td>Contador + base62</td><td>Nunca</td><td>Central (sequence)</td><td>Sim: enumerável</td><td>4 → 7</td></tr><tr><td>Snowflake</td><td>Nunca</td><td>Só o ID da instância</td><td>Ordenado por tempo</td><td>~11</td></tr><tr><td>Faixas pré-alocadas</td><td>Nunca</td><td>Uma vez por lote</td><td>Depende do embaralhamento</td><td>6–7</td></tr>
+</table>
+<p class="lead ink" style="margin-top:48px">Encurta quer curto, não enumerável e sem gargalo: <span class="hl">aleatório de 7</span> ou <span class="hl">faixas embaralhadas</span>.</p>
+<aside>• Não existe melhor: existe o que combina com os requisitos (curto, não enumerável, sem colisão, sem gargalo).
+• Aleatório: simples e não enumerável; preço = tratar colisão com INSERT … ON CONFLICT e retry.
+• Hash: deduplica URL repetida (às vezes desejável, às vezes não: analytics por cliente).
+• Contador: zero colisão mas expõe volume e permite varredura. Snowflake: sem coordenação, mas longo.
+• Faixas: o melhor dos mundos quando combinadas com embaralhamento (próximo slide).</aside>
+</section>
+<section id="aniversario" class="accent">
+<p class="eyebrow">Paradoxo do aniversário</p>
+<div style="flex:1"></div>
+<p class="huge" style="font-size:120px">575 links</p>
+<p class="lead ink" style="margin-top:24px;max-width:1500px">bastam para 50% de chance de colisão num espaço de 238 mil códigos (3 caracteres).</p>
+<p class="lead ink" style="margin-top:48px;max-width:1500px">Com 7 caracteres e 6 bi de links: <b>≈ 5 milhões de colisões</b> em 5 anos. Trate o conflito sempre.</p>
+<div style="flex:1"></div>
+<aside>• Fórmula: n ≈ √(2·N·ln 2). Para N = 62³ = 238.328 → ~575.
+• Colisões esperadas ≈ n²/2N. Com n = 6 bi e N = 3,5 tri → ~5 milhões.
+• Lição: 'espaço enorme' não dispensa tratamento de colisão; só torna o retry raro.
+• O Lab 2 mostra a curva subindo conforme a tabela enche.</aside>
+</section>
+<section id="faixas">
+<p class="eyebrow">04 · Geração de IDs</p>
+<h2>Contador sem gargalo: faixas de IDs</h2>
+<!-- top 632,0,400,120 ; bottoms 0/632/1264,300,400,140 ; bus y=210 -->
+<div style="position:relative;width:1664px;height:440px">
+<div class="lnode pin hot" style="left:632px;top:0px;width:400px;height:120px"><p class="nt">Serviço de faixas</p><p class="ns">um contador central</p></div><div class="lnode pin" style="left:0px;top:300px;width:400px;height:140px"><p class="nt">App 1</p><p class="ns">faixa 1.000–1.999</p></div><div class="lnode pin" style="left:632px;top:300px;width:400px;height:140px"><p class="nt">App 2</p><p class="ns">faixa 2.000–2.999</p></div><div class="lnode pin" style="left:1264px;top:300px;width:400px;height:140px"><p class="nt">App 3</p><p class="ns">faixa 3.000–3.999</p></div><x-connector class="conn-l" x1="832" y1="120" x2="832" y2="210" head="none" route="straight"></x-connector><x-connector class="conn-l" x1="200" y1="210" x2="1464" y2="210" head="none" route="straight"></x-connector><x-connector class="conn-l" x1="200" y1="210" x2="200" y2="300" head="end" route="straight"></x-connector><x-connector class="conn-l" x1="832" y1="210" x2="832" y2="300" head="end" route="straight"></x-connector><x-connector class="conn-l" x1="1464" y1="210" x2="1464" y2="300" head="end" route="straight"></x-connector>
+</div>
+<p style="margin-top:36px">Cada instância pega um lote, gera códigos localmente e só volta ao contador quando acaba. Embaralhe o número antes do base62 para não ficar previsível.</p>
+<aside>• Também chamado de Key Generation Service (KGS) ou ticket server.
+• O contador é consultado 1 vez a cada 1.000 links, não a cada link: some o gargalo.
+• Se uma instância morre, perde o resto da faixa. E daí? Temos 3,5 tri de códigos.
+• Para não ser enumerável: permutar o número (ex.: cifra de Feistel ou multiplicação modular) antes do base62.</aside>
+</section>
+<section id="lab2" class="dark">
+<div class="row" style="gap:64px;flex:1">
+<div class="labside">
+<p class="eyebrow">Laboratório · 15 min</p>
+<p class="labtag">LAB 2</p>
+<h3>Geração de IDs</h3>
+<p class="small">Grafana: localhost:3000 · roteiro completo no README do kit</p>
+</div>
+<div class="col" style="gap:28px">
+<p class="code"><span class="c"># .env: ID_STRATEGY=random CODE_LEN=3</span><br>docker compose up -d app1 app2<br>docker compose run --rm -e LINKS=60000 \<br>&#160;&#160;k6 run /scripts/seed.js<br><span class="c"># depois: counter, snowflake e hash</span></p>
+<div class="card" style="--i:1;padding:28px 36px"><p class="ct">Observe no Grafana</p><ul><li>Colisões crescendo conforme a tabela enche</li><li>counter: códigos sequenciais (1000, 1001…)</li><li>hash: a mesma URL volta com "dedup": true</li></ul></div>
+
+<div class="card q" style="--i:2;padding:24px 32px"><p class="paper"><b>Pergunta:</b> Dedup é desejável? E se dois clientes encurtarem a mesma URL?</p></div>
+</div>
+</div>
+<aside>• Antes: TRUNCATE na tabela (comando no README) para o efeito ficar limpo.
+• Painel '4 · Geração de IDs': taxa de colisão sobe junto com 'links no banco'.
+• No counter, chamar /api/links/recent e mostrar a sequência: é isso que um concorrente veria.
+• Voltar para random / 7 caracteres antes do Lab 3.</aside>
+</section>
+<section id="banco">
+<p class="eyebrow">05 · Banco de dados</p>
+<h2>SQL ou NoSQL? Olhe o padrão de acesso</h2>
+<div class="g3" style="margin-bottom:40px">
+<div class="card" style="--i:0"><p class="ct">99% chave → valor</p><p>Buscar 1 linha pelo código.</p></div><div class="card" style="--i:1"><p class="ct">Sem joins</p><p>Nem transação entre links.</p></div><div class="card" style="--i:2"><p class="ct">40 : 20.000</p><p>Escritas e leituras por segundo no pico.</p></div>
+</div>
+<table class="tbl-s">
+<tr><th style="width:28%">Opção</th><th style="width:36%">Bom para</th><th>Cuidado com</th></tr>
+<tr class="band"><td>Postgres + réplicas de leitura</td><td>Começar; alias único; consistência forte</td><td>Sharding manual acima de alguns TB</td></tr>
+<tr><td>DynamoDB / Cassandra</td><td>Chave-valor em escala; multi-região</td><td>Consistência eventual; modelar pelo acesso</td></tr>
+<tr><td>Sharding por hash(code)</td><td>Espalhar carga por igual</td><td>Re-sharding; consultas "por cliente"</td></tr>
+</table>
+<aside>• O padrão de acesso escolhe o banco, não a moda.
+• Decisão do Encurta: Postgres no MVP (time conhece, alias único é trivial com PK).
+• Gatilho para mudar: passar de alguns TB ou precisar de escrita ativa em várias regiões → chave-valor distribuído.
+• Réplicas de leitura ajudam pouco se o cache já absorve as leituras: o problema volta a ser escrita (cliques!).</aside>
+</section>
+<section id="cache" class="dark">
+<p class="eyebrow">06 · Cache</p>
+<h2>Cache-aside: 20% dos links, 80% dos cliques</h2>
+<!-- App 0,200,360,160 ; Redis 880,0,420,170 ; PG 880,390,420,170 ; side 1380.. -->
+<div style="position:relative;width:1664px;height:560px">
+<div class="pin hot" style="left:0px;top:195px;width:360px;height:170px"><p class="nt">App</p><p class="ns">recebe GET /código</p></div><div class="pin" style="left:880px;top:0px;width:420px;height:170px"><p class="nt">Redis</p><p class="ns">1 · GET l:código → hit? responde</p></div><div class="pin" style="left:880px;top:390px;width:420px;height:170px"><p class="nt">Postgres</p><p class="ns">2 · miss → SELECT<br>3 · SET no Redis com TTL</p></div><x-connector class="conn" x1="360" y1="250" x2="880" y2="85" head="end" route="elbow"></x-connector><x-connector class="conn" x1="360" y1="310" x2="880" y2="475" head="end" route="elbow"></x-connector>
+<div style="position:absolute;left:1380px;top:120px;width:284px;display:flex;flex-direction:column;gap:8px">
+<p class="num">≈ 33 GB</p><p>cabem os links quentes em memória</p>
+</div>
+</div>
+<aside>• Cache-aside: a aplicação consulta o cache; no miss, busca no banco e preenche o cache.
+• Hit ratio depende da distribuição: com cauda longa (poucos links virais), passa de 90%.
+• TTL é a válvula de consistência: link editado/expirado pode ficar velho até o TTL vencer.
+• Pergunta: cachear o redirect na borda (CDN) também? Guardar para a escala global.</aside>
+</section>
+<section id="cache-falhas">
+<p class="eyebrow">06 · Cache</p>
+<h2>Quando o cache vira problema</h2>
+<div class="g2 fill">
+<div class="card" style="--i:0"><p class="ct">Stampede</p><p>A chave viral expira e todos vão ao banco ao mesmo tempo.</p><p class="ink">→ Single-flight; renovar antes de expirar.</p></div><div class="card" style="--i:1"><p class="ct">TTL sincronizado</p><p>Chaves criadas juntas expiram juntas.</p><p class="ink">→ Jitter de ±20% no TTL.</p></div><div class="card" style="--i:2"><p class="ct">Links inexistentes</p><p>Todo miss de código falso vai ao banco.</p><p class="ink">→ Cache negativo com TTL curto.</p></div><div class="card" style="--i:3"><p class="ct">Redis fora</p><p>O banco recebe tudo de uma vez, com cache frio.</p><p class="ink">→ Timeouts curtos; degradar; aquecer aos poucos.</p></div>
+</div>
+<aside>• Cache resolve latência e carga, mas cria quatro modos de falha novos.
+• Stampede é o clássico de Black Friday: o link da TV expira e o banco recebe 500 SELECTs iguais.
+• Cache negativo protege contra varredura/bots, mas um link recém-criado pode 'não existir' por 30 s.
+• Redis fora: no kit usamos timeout de 50 ms e fallback para o banco. O sistema fica lento, não cai.</aside>
+</section>
+<section id="lab34" class="dark">
+<div class="row" style="gap:64px;flex:1">
+<div class="labside">
+<p class="eyebrow">Laboratório · 20 min</p>
+<p class="labtag">LAB 3·4</p>
+<h3>Cache-aside e suas falhas</h3>
+<p class="small">Grafana: localhost:3000 · roteiro completo no README do kit</p>
+</div>
+<div class="col" style="gap:28px">
+<p class="code"><span class="c"># Lab 3 · .env: CACHE_ENABLED=true</span><br>docker compose run --rm -e PERFIL=pico -e PEAK=1500 k6 run /scripts/trafego.js<br><span class="c"># Lab 4 · CACHE_TTL=5 DB_EXTRA_LATENCY_MS=100</span><br>docker compose run --rm -e PERFIL=viral -e RATE=800 k6 run /scripts/trafego.js<br>docker compose stop redis</p>
+<div class="card" style="--i:1;padding:28px 36px"><p class="ct">Observe no Grafana</p><ul><li>Hit ratio acima de 90% em segundos</li><li>select_url despenca; update_clicks não</li><li>Picos de miss a cada 5 s (stampede)</li></ul></div>
+
+<div class="card q" style="--i:2;padding:24px 32px"><p class="paper"><b>Pergunta:</b> O cache resolveu? Por que o pico melhorou tão pouco?</p></div>
+</div>
+</div>
+<aside>• Lab 3: mostrar hit ratio e 'Consultas/s por operação' lado a lado.
+• O SELECT some, mas o UPDATE do clique continua: o gargalo não mudou de lugar.
+• Lab 4a: painel 'Stampede'. Depois ligar SINGLE_FLIGHT e CACHE_TTL_JITTER e comparar.
+• Lab 4c: parar o Redis com tráfego rodando; o hit ratio volta aos poucos (cache frio).</aside>
+</section>
+<section id="medido" class="dark">
+<p class="eyebrow">Medido no laboratório · 1 instância · 700 req/s</p>
+<h2>Por que o cache quase não ajudou?</h2>
+<div class="g3">
+<div class="col"><h3>MVP</h3><p class="huge">5,4 s</p><p>p95 · SELECT + UPDATE</p></div>
+<div class="col"><h3>+ cache</h3><p class="huge">4,0 s</p><p>p95 · ainda 1 UPDATE por clique</p></div>
+<div class="col fragment"><h3>+ cliques assíncronos</h3><p class="huge">99 ms</p><p>p95 · o banco sai do caminho</p></div>
+</div>
+<p class="lead paper" style="margin-top:64px">O cache tirou o SELECT. O gargalo era o <span class="hl">UPDATE de cada clique</span>.</p>
+<aside>• Números do meu teste do kit (uma instância, 10 ms de latência simulada até o banco). Os de vocês vão variar.
+• Pausa dramática: perguntar o que falta antes de revelar a terceira coluna (clique para mostrar).
+• Lição: otimizar o que não é gargalo não move o ponteiro. Medir antes de mexer.
+• Gancho para a próxima seção: analytics.</aside>
+</section>
+<section id="analytics">
+<p class="eyebrow">07 · Analytics</p>
+<h2>Tire o clique do caminho crítico</h2>
+<div class="row" style="gap:0;align-items:stretch">
+<div class="lnode big"><p class="nt">App</p><p class="ns">XADD no stream</p></div><x-connector class="conn-l" style="width:96px;height:0;align-self:center"></x-connector><div class="lnode hot big"><p class="nt">Stream</p><p class="ns">Redis Streams ou Kafka</p></div><x-connector class="conn-l" style="width:96px;height:0;align-self:center"></x-connector><div class="lnode big"><p class="nt">Worker</p><p class="ns">agrega em lote</p></div><x-connector class="conn-l" style="width:96px;height:0;align-self:center"></x-connector><div class="lnode big"><p class="nt">Postgres / OLAP</p><p class="ns">1 UPDATE por lote</p></div>
+</div>
+<div class="g2 fill" style="margin-top:56px">
+<div class="card" style="--i:0"><p class="ct">Síncrono</p><p>1 UPDATE por clique, todos na mesma linha do link viral. O redirect espera o banco.</p></div><div class="card hot" style="--i:1"><p class="ct">Assíncrono</p><p>1 UPDATE para centenas de cliques. O contador atrasa alguns segundos: consistência eventual.</p></div>
+</div>
+<aside>• Separar caminho crítico (redirect) de caminho analítico (contagem).
+• O redirect só publica um evento (~0,1 ms no Redis). Quem grava é o worker, em lote.
+• Trade-off: contador atrasado e uma fila para operar (lag, reprocessamento, perda se o broker cair).
+• Em escala: Kafka particionado por código + ClickHouse/Druid para consultas analíticas (por país, por hora).</aside>
+</section>
+<section id="lab5" class="dark">
+<div class="row" style="gap:64px;flex:1">
+<div class="labside">
+<p class="eyebrow">Laboratório · 10 min</p>
+<p class="labtag">LAB 5</p>
+<h3>Analytics assíncrono</h3>
+<p class="small">Grafana: localhost:3000 · roteiro completo no README do kit</p>
+</div>
+<div class="col" style="gap:28px">
+<p class="code"><span class="c"># .env: CACHE_ENABLED=true CLICK_MODE=sync</span><br>docker compose run --rm -e PERFIL=viral -e RATE=800 \<br>&#160;&#160;-e DURATION=6m k6 run /scripts/trafego.js<br><span class="c"># no meio: CLICK_MODE=async e up -d app1 app2</span><br>docker compose stop worker&#160;&#160;<span class="c"># e depois start</span></p>
+<div class="card" style="--i:1;padding:28px 36px"><p class="ct">Observe no Grafana</p><ul><li>update_clicks some; o banco fica quase ocioso</li><li>A fila cresce com o worker parado e drena depois</li><li>/stats anda aos saltos: consistência eventual</li></ul></div>
+
+<div class="card q" style="--i:2;padding:24px 32px"><p class="paper"><b>Pergunta:</b> Se o Redis cair com 100 mil cliques na fila, o que se perde?</p></div>
+</div>
+</div>
+<aside>• Trocar o modo com o k6 rodando: dá um soluço de erros (as 2 instâncias reiniciam juntas) → falar de rolling deploy.
+• Painel '5 · Analytics': eventos por lote sobe de 1 para centenas conforme a carga.
+• Parar o worker: o lag no Redis cresce; o redirect nem percebe. Isso é desacoplamento.
+• Resposta da pergunta: sem persistência (AOF) ou um broker durável (Kafka), perde tudo.</aside>
+</section>
+<section id="disponibilidade" class="dark">
+<p class="eyebrow">08 · Disponibilidade</p>
+<h2>Quanto tempo fora por ano você aceita?</h2>
+<div class="g3" style="margin-bottom:44px">
+<div class="card" style="--i:0"><p class="small">99,9%</p><p class="num">8h46</p></div><div class="card hot" style="--i:1"><p class="small">99,99% · nossa meta</p><p class="num">52 min</p></div><div class="card" style="--i:2"><p class="small">99,999%</p><p class="num">5 min</p></div>
+</div>
+<div class="g3">
+<div class="card" style="--i:3"><p class="ct">Stateless</p><p>Instâncias iguais atrás do balanceador. Uma cai, as outras seguem.</p></div><div class="card" style="--i:4"><p class="ct">Banco redundante</p><p>Primário + réplica em outra zona, failover automático.</p></div><div class="card" style="--i:5"><p class="ct">Desacoplar</p><p>O que não é essencial nunca derruba o redirect.</p></div>
+</div>
+<aside>• Cada 9 a mais custa uma ordem de grandeza em esforço e dinheiro.
+• 52 min por ano não cabem num deploy manual com janela de manutenção.
+• Stateless + LB resolve o app; o difícil é o estado (banco, cache, fila).
+• O terceiro card é a lição do Lab 6: acoplamento define disponibilidade.</aside>
+</section>
+<section id="lab6" class="dark">
+<div class="row" style="gap:64px;flex:1">
+<div class="labside">
+<p class="eyebrow">Laboratório · 15 min</p>
+<p class="labtag">LAB 6</p>
+<h3>Game day</h3>
+<p class="small">Grafana: localhost:3000 · roteiro completo no README do kit</p>
+</div>
+<div class="col" style="gap:28px">
+<p class="code">docker compose run --rm -e RATE=500 \<br>&#160;&#160;-e DURATION=10m k6 run /scripts/trafego.js</p>
+
+<table class="tbl-s">
+<tr><th style="width:52%">Falha</th><th>Antes de rodar, preveja</th></tr>
+<tr><td>docker compose stop app2</td><td>Quantos erros o usuário vê?</td></tr>
+<tr><td>stop postgres com CLICK_MODE=sync</td><td>O cache salva os redirects?</td></tr>
+<tr><td>stop postgres com CLICK_MODE=async</td><td>E agora?</td></tr>
+</table>
+<div class="card q" style="--i:2;padding:24px 32px"><p class="paper"><b>Pergunta:</b> No cenário 2 o link está no cache. Por que o redirect falha?</p></div>
+</div>
+</div>
+<aside>• Pedir que cada um ESCREVA a previsão antes de cada falha. Depois comparar.
+• app2 cai: o nginx tenta a outra instância (proxy_next_upstream); quase nenhum erro.
+• Postgres cai com clique síncrono: 100% de erro mesmo com cache. O analytics derrubou o produto.
+• Postgres cai com clique assíncrono: só falham os links fora do cache.
+• Painel '6 · Disponibilidade' e a disponibilidade percebida no topo.</aside>
+</section>
+<section id="global" class="dark">
+<p class="eyebrow">09 · Escala global</p>
+<h2 style="margin-bottom:36px">A arquitetura do dia da Black Friday</h2>
+<!-- cols 0/432/864/1296 w368 ; rows 0/250/500 h140 -->
+<div style="position:relative;width:1664px;height:640px">
+<div class="pin" style="left:0px;top:0px;width:368px;height:140px"><p class="nt">Usuário</p><p class="ns">SP, Lisboa, Tóquio</p></div><div class="pin" style="left:432px;top:0px;width:368px;height:140px"><p class="nt">DNS geo · Anycast</p><p class="ns">leva à borda mais perto</p></div><div class="pin hot" style="left:864px;top:0px;width:368px;height:140px"><p class="nt">Edge · CDN</p><p class="ns">cacheia redirects quentes</p></div><div class="pin hot" style="left:864px;top:250px;width:368px;height:140px"><p class="nt">Apps regionais</p><p class="ns">LB + instâncias stateless</p></div><div class="pin" style="left:1296px;top:250px;width:368px;height:140px"><p class="nt">Redis regional</p><p class="ns">links quentes da região</p></div><div class="pin" style="left:864px;top:500px;width:368px;height:140px"><p class="nt">Banco chave-valor</p><p class="ns">multi-região, replicado</p></div><div class="pin" style="left:432px;top:250px;width:368px;height:140px"><p class="nt">Stream de cliques</p><p class="ns">Kafka, partição por código</p></div><div class="pin" style="left:432px;top:500px;width:368px;height:140px"><p class="nt">ClickHouse</p><p class="ns">analytics em colunas</p></div>
+<div class="pin" style="left:0;top:250px;width:368px;height:390px;background:transparent;border-style:dashed"><p class="ns">Leitura: resolvida na borda ou na região mais próxima.</p><p class="ns" style="margin-top:16px">Escrita: rara (40/s). Pode ir à região dona do código.</p></div>
+<x-connector class="conn" x1="368" y1="70" x2="432" y2="70" head="end" route="straight"></x-connector><x-connector class="conn" x1="800" y1="70" x2="864" y2="70" head="end" route="straight"></x-connector><x-connector class="conn" x1="1048" y1="140" x2="1048" y2="250" head="end" route="straight"></x-connector><x-connector class="conn" x1="1232" y1="320" x2="1296" y2="320" head="end" route="straight"></x-connector><x-connector class="conn" x1="864" y1="320" x2="800" y2="320" head="end" route="straight"></x-connector><x-connector class="conn" x1="1048" y1="390" x2="1048" y2="500" head="end" route="straight"></x-connector><x-connector class="conn" x1="616" y1="390" x2="616" y2="500" head="end" route="straight"></x-connector>
+</div>
+<aside>• Juntar tudo: cada caixa nasceu de um número ou de um lab.
+• Edge/CDN com 302 e Cache-Control curto (ex.: 60 s): mata a latência intercontinental e absorve picos virais.
+• Trade-off: clique servido pela borda não passa pelo app → analytics via logs da CDN.
+• Banco chave-valor multi-região: alias único global exige escrita na região 'dona' ou consenso.
+• Desafio extra: DB_EXTRA_LATENCY_MS=150 simula Tóquio → São Paulo.</aside>
+</section>
+<section id="tradeoffs">
+<p class="eyebrow">Evolução e trade-offs</p>
+<h2>O que decidimos e quanto custou</h2>
+<table class="tbl" style="font-size:32px">
+<tr><th style="width:32%">Decisão</th><th style="width:34%">Ganhamos</th><th>Pagamos</th></tr>
+<tr><td>302 em vez de 301</td><td>Analytics completo</td><td>Todo clique passa por nós</td></tr><tr><td>Código aleatório de 7</td><td>Sem coordenação, não enumerável</td><td>Tratar colisão sempre</td></tr><tr><td>Cache-aside com TTL</td><td>Leitura barata e rápida</td><td>Dado velho; stampede</td></tr><tr><td>Cliques assíncronos</td><td>Redirect rápido e desacoplado</td><td>Contador atrasado; fila para operar</td></tr><tr><td>Chave-valor multi-região</td><td>Escala e latência global</td><td>Consistência eventual; custo</td></tr>
+</table>
+<aside>• Este é o slide para fotografar: é o formato de resposta que vamos repetir nas 8 aulas.
+• Toda linha tem um 'pagamos'. Se você não sabe o custo de uma decisão, ainda não entendeu a decisão.
+• Em entrevista: narrar a evolução nesta ordem (MVP → número que quebra → correção → custo).
+• Pedir para a turma acrescentar uma linha: 'alias personalizado'.</aside>
+</section>
+<section id="fechamento" class="dark">
+<p class="eyebrow">Fechamento</p>
+<h2>Para levar</h2>
+<div class="g3">
+<div class="card" style="--i:0"><p class="ct">Números primeiro</p><p>100 : 1 decidiu cache. 40 escritas/s decidiu que escrita não é problema.</p></div><div class="card" style="--i:1"><p class="ct">Meça o gargalo</p><p>O cache sozinho quase não ajudou. O clique síncrono era o vilão.</p></div><div class="card" style="--i:2"><p class="ct">Acoplamento</p><p>O que não é essencial não pode derrubar o caminho crítico.</p></div>
+</div>
+<div class="card hot" style="--i:3;margin-top:44px;flex-direction:row;align-items:center;justify-content:space-between">
+<div><p class="small">Próxima aula · 02/12 · 19h</p><p class="ct">Plataforma de cursos e vídeos sob demanda</p></div>
+<p class="small" style="width:520px">Para casa: os 4 desafios extras do README do kit.</p>
+</div>
+<aside>• Retomar as respostas do quadro do slide 'O caso': quais se confirmaram?
+• Três ideias que valem para todas as próximas aulas.
+• Próxima aula: vídeo sob demanda (armazenamento de objetos, CDN, transcodificação). Muito do de hoje volta.
+• Lembrar: replay disponível; dúvidas no canal da turma.</aside>
+</section>
+</div>
+<div id="notes"></div>
+<div id="hud"></div>
+<script>
+(function(){
+var NS='http://www.w3.org/2000/svg',stage=document.getElementById('stage');
+var S=[].slice.call(stage.children).filter(function(e){return e.tagName==='SECTION';});
+var hud=document.getElementById('hud'),notes=document.getElementById('notes'),cur=0;
+function el(n,a){var e=document.createElementNS(NS,n);for(var k in a)e.setAttribute(k,a[k]);return e;}
+function draw(c,pts,head){
+ var svg=el('svg',{width:1,height:1}),d='M'+pts.map(function(p){return p[0]+' '+p[1];}).join(' L');
+ svg.appendChild(el('path',{d:d,fill:'none',stroke:'currentColor','stroke-width':3}));
+ if(head){var a=pts[pts.length-2],b=pts[pts.length-1],t=Math.atan2(b[1]-a[1],b[0]-a[0]),L=16,W=.45;
+  svg.appendChild(el('path',{d:'M'+b[0]+' '+b[1]+' L'+(b[0]-L*Math.cos(t-W))+' '+(b[1]-L*Math.sin(t-W))+' L'+(b[0]-L*Math.cos(t+W))+' '+(b[1]-L*Math.sin(t+W))+'Z',fill:'currentColor'}));}
+ c.appendChild(svg);
+}
+[].forEach.call(document.querySelectorAll('x-connector'),function(c){
+ if(c.hasAttribute('x1')){
+  var x1=+c.getAttribute('x1'),y1=+c.getAttribute('y1'),x2=+c.getAttribute('x2'),y2=+c.getAttribute('y2');
+  c.style.cssText+=';position:absolute;left:0;top:0;width:0;height:0';
+  var pts=[[x1,y1],[x2,y2]];
+  if(c.getAttribute('route')==='elbow'){var m=(x1+x2)/2;pts=[[x1,y1],[m,y1],[m,y2],[x2,y2]];}
+  draw(c,pts,c.getAttribute('head')!=='none');
+ }else{draw(c,[[0,0],[parseFloat(c.style.width)||96,0]],true);}
+});
+function frags(s){return [].slice.call(s.querySelectorAll('.fragment'));}
+function show(i,end){
+ cur=Math.max(0,Math.min(S.length-1,i));
+ S.forEach(function(s,k){s.classList.toggle('on',k===cur);});
+ frags(S[cur]).forEach(function(f){f.classList.toggle('visible',!!end);});
+ var a=S[cur].querySelector('aside');notes.textContent=a?a.textContent:'';
+ hud.textContent=(cur+1)+' / '+S.length;
+ history.replaceState(null,'','#'+(cur+1));
+}
+function next(){var f=frags(S[cur]).filter(function(x){return !x.classList.contains('visible');})[0];
+ if(f)f.classList.add('visible');else if(cur<S.length-1)show(cur+1);}
+function prev(){var f=frags(S[cur]).filter(function(x){return x.classList.contains('visible');}).pop();
+ if(f)f.classList.remove('visible');else if(cur>0)show(cur-1,true);}
+function fit(){var k=Math.min(innerWidth/1920,innerHeight/1080);
+ stage.style.transform='scale('+k+') translate(-50%,-50%)';}
+addEventListener('resize',fit);fit();
+addEventListener('keydown',function(e){
+ var k=e.key;
+ if(k==='ArrowRight'||k==='ArrowDown'||k==='PageDown'||k===' '||k==='Enter'){e.preventDefault();next();}
+ else if(k==='ArrowLeft'||k==='ArrowUp'||k==='PageUp'||k==='Backspace'){e.preventDefault();prev();}
+ else if(k==='Home')show(0);else if(k==='End')show(S.length-1);
+ else if(k==='n'||k==='N')document.body.classList.toggle('notes');
+ else if(k==='f'||k==='F'){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();}
+});
+stage.addEventListener('click',function(e){if(e.target.closest('a'))return;(e.clientX<innerWidth*.25?prev:next)();});
+var h=location.hash.slice(1),n=parseInt(h,10),byId=S.findIndex(function(s){return s.id===h;});
+show(byId>=0?byId:(n>=1?n-1:0));
+})();
+</script>
+</body>
+</html>
